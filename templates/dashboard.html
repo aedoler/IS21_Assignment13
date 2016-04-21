@@ -15,7 +15,23 @@
     {% for item in students %}
     <tr><td>{{ item.id }}</td><td>{{ item.name }}</td><td>{{ item.last_name }}</td></tr>
         {% endfor %}
+</table>
+<br>
+<br>
 
+<table name="quizzes_table" style="width:50%" border="2">
+    <tr>
+    <th style="text-align: center" colspan="3">Quizzes</th>
+    </tr>
+    <tr><th>Quiz ID</th><th>Subject</th><th>No. Questions</th></tr>
+
+    {% for item in quizzes %}
+    <tr><td>{{ item.id }}</td><td>{{ item.subject }}</td><td>{{ item.num_questions }}</td></tr>
+        {% endfor %}
+</table>
+
+
+  </form>
 
 
 </body>

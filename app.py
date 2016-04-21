@@ -51,12 +51,27 @@ def dashboard():
     if session['logged_in'] != True:
         return redirect('/login')
     else:
-        cur = g.db.execute('SELECT id, name, last_name FROM students order by last_name')
+        cur = g.db.execute('SELECT id, name, last_name FROM students order by id')
         students = [dict(id=row[0], name=row[1], last_name=row[2]) for row in cur.fetchall()]
-        for item in students:
-            print item
+        cur2 = g.db.execute('SELECT id, subject, num_questions FROM quizzes order by id')
+        quizzes = [dict(id=row[0], subject=row[1], num_questions=row[2]) for row in cur2.fetchall()]
 
-        return render_template('dashboard.html', students = students)
+        return render_template('dashboard.html', students = students, quizzes = quizzes)
+
+@app.route('/student/add', methods = ['GET', 'POST'])
+def add_student():
+    if session['logged_in'] != True:
+        return redirect('/login')
+    if request.method == 'GET':
+        return render_template('add_students.html')
+
+    if request.method == 'POST':
+        g.db.execute('INSERT INTO students (name, last_name) VALUES (?, ?),', [request.form['name'], request.form['last_name']])
+        g.db.commit()
+
+        return redirect('/dashboard')
+
+
 
 
 
