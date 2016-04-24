@@ -54,7 +54,7 @@ def login():
 
 @app.route('/dashboard', methods = ['GET'])
 def dashboard():
-    if session['logged_in'] != True:
+    if session['logged_in'] == False:
         return redirect('/login')
     else:
         cur = g.db.execute('SELECT id, name, last_name FROM students order by id')
@@ -70,12 +70,13 @@ def add_student():
     try:
         if session['logged_in'] == False:
             return redirect('/login')
-        if request.method == 'GET':
-            return render_template('add_students.html')
+        else:
+            if request.method == 'GET':
+                return render_template('add_students.html')
 
-        if request.method == 'POST':
-            g.db.execute("INSERT INTO students (name, last_name) VALUES (?, ?)", [request.form['name'], request.form['last_name']])
-            g.db.commit()
+            if request.method == 'POST':
+                g.db.execute("INSERT INTO students (name, last_name) VALUES (?, ?)", [request.form['name'], request.form['last_name']])
+                g.db.commit()
     except:
         render_template('add_students.html')
 
@@ -87,17 +88,39 @@ def add_quiz():
     try:
         if session['logged_in'] == False:
             return redirect('/login')
-        if request.method == 'GET':
-            return render_template('add_quizzes.html')
-        if request.method == 'POST':
-            g.db.execute("INSERT INTO quizzes (subject, num_questions, date) VALUES (?, ?, ?)",
-                         [request.form['subject'], request.form['questions'], request.form['date']])
+        else:
+            if request.method == 'GET':
+                return render_template('add_quizzes.html')
+            if request.method == 'POST':
+                g.db.execute("INSERT INTO quizzes (subject, num_questions, date) VALUES (?, ?, ?)",
+                            [request.form['subject'], request.form['questions'], request.form['date']])
             g.db.commit()
     except(Exception) as e:
-        print e
+        print e #prints of Server side to identify error
         return render_template('add_quizzes.html')
 
     return redirect('/dashboard')
+
+@app.route('/student/<id>', methods = ['GET'])
+def view_student(id):
+    try:
+        if session['logged_in'] == False:
+            return redirect('/login')
+
+        cur = g.db.execute('SELECT students.name, students.last_name, quizzes.subject, results.score'
+                           'FROM students'
+                           'INNER JOIN results'
+                           'ON students.id = results.s_id'
+                           'INNER JOIN quizzes'
+                           'ON quizzes.id = results.q_id'
+                           'WHERE students.id = ?', (id))
+        student_results = [dict(name=row[0], last_name=row[1], subject=row[2], grade=row[3]) for row in cur.fetchall()]
+
+    except(Exception) as e:
+        print e
+    return render_template('results.html', student_results = student_results)
+
+
 
 
 if __name__ == "__main__":
