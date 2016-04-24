@@ -102,22 +102,15 @@ def add_quiz():
     return redirect('/dashboard')
 
 @app.route('/student/<id>', methods = ['GET'])
-def view_student(id):
-    try:
-        if session['logged_in'] == False:
-            return redirect('/login')
+def student_grades(id):
 
-        cur = g.db.execute('SELECT students.name, students.last_name, quizzes.subject, results.score'
-                           'FROM students'
-                           'INNER JOIN results'
-                           'ON students.id = results.s_id'
-                           'INNER JOIN quizzes'
-                           'ON quizzes.id = results.q_id'
-                           'WHERE students.id = ?', (id))
-        student_results = [dict(name=row[0], last_name=row[1], subject=row[2], grade=row[3]) for row in cur.fetchall()]
 
-    except(Exception) as e:
-        print e
+    if session['logged_in'] == False:
+        return redirect('/login')
+
+    cur = g.db.execute('SELECT students.name, students.last_name, quizzes.subject, results.score FROM students INNER JOIN results ON students.id = results.s_id INNER JOIN quizzes  ON quizzes.id  = results.q_id WHERE students.id = ?', id)
+
+    student_results = [dict(name=row[0], last_name=row[1], subject=row[2], grade=row[3]) for row in cur.fetchall()]
     return render_template('results.html', student_results = student_results)
 
 
