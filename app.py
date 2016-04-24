@@ -14,12 +14,15 @@ PASSWORD = 'password'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
+
 def connect_db():
     return sqlite3.connect(app.config['DATABASE'])
+
 
 @app.before_request
 def get_db():
     g.db = connect_db()
+
 
 @app.teardown_request
 def teardown_request(exception):
@@ -27,10 +30,12 @@ def teardown_request(exception):
     if db is not None:
         db.close()
 
+
 @app.route('/')
 def hello_world():
 
     return redirect('/login')
+
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
@@ -46,6 +51,7 @@ def login():
 
     return render_template('login.html', error=error)
 
+
 @app.route('/dashboard', methods = ['GET'])
 def dashboard():
     if session['logged_in'] != True:
@@ -58,23 +64,40 @@ def dashboard():
 
         return render_template('dashboard.html', students = students, quizzes = quizzes)
 
+
 @app.route('/student/add', methods = ['GET', 'POST'])
 def add_student():
-    if session['logged_in'] != True:
-        return redirect('/login')
-    if request.method == 'GET':
-        return render_template('add_students.html')
+    try:
+        if session['logged_in'] == False:
+            return redirect('/login')
+        if request.method == 'GET':
+            return render_template('add_students.html')
 
-    if request.method == 'POST':
-        g.db.execute('INSERT INTO students (name, last_name) VALUES (?, ?),', [request.form['name'], request.form['last_name']])
-        g.db.commit()
+        if request.method == 'POST':
+            g.db.execute("INSERT INTO students (name, last_name) VALUES (?, ?)", [request.form['name'], request.form['last_name']])
+            g.db.commit()
+    except:
+        render_template('add_students.html')
 
-        return redirect('/dashboard')
+    return redirect('/dashboard')
 
 
+@app.route('/quiz/add', methods = ['GET', 'POST'])
+def add_quiz():
+    try:
+        if session['logged_in'] == False:
+            return redirect('/login')
+        if request.method == 'GET':
+            return render_template('add_quizzes.html')
+        if request.method == 'POST':
+            g.db.execute("INSERT INTO quizzes (subject, num_questions, date) VALUES (?, ?, ?)",
+                         [request.form['subject'], request.form['questions'], request.form['date']])
+            g.db.commit()
+    except(Exception) as e:
+        print e
+        return render_template('add_quizzes.html')
 
-
-
+    return redirect('/dashboard')
 
 
 if __name__ == "__main__":
