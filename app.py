@@ -104,7 +104,6 @@ def add_quiz():
 @app.route('/student/<id>', methods = ['GET'])
 def student_grades(id):
 
-
     if session['logged_in'] == False:
         return redirect('/login')
 
@@ -113,6 +112,23 @@ def student_grades(id):
     student_results = [dict(name=row[0], last_name=row[1], subject=row[2], grade=row[3]) for row in cur.fetchall()]
     return render_template('results.html', student_results = student_results)
 
+@app.route('/result/add', methods = ['GET', 'POST'])
+def add_result():
+
+    if session['logged_in'] == False:
+        return redirect('/login')
+
+    if request.method == 'GET':
+        cur = g.db.execute("SELECT id, name, last_name FROM students ORDER BY id")
+        students = [dict(id=row[0], name=row[1], last_name=row[2]) for row in cur.fetchall()]
+        cur2 = g.db.execute("SELECT id, subject FROM quizzes ORDER BY id")
+        quizzes = [dict(id=row[0], subject=row[1]) for row in cur2.fetchall()]
+        return render_template('add_results.html', students = students, quizzes = quizzes)
+    if request.method == 'POST':
+        g.db.execute("INSERT INTO results (s_id, q_id, score) VALUES (?, ?, ?)", [request.form['add_student'], request.form['add_quiz'], request.form['add_score']])
+        g.db.commit()
+
+        return redirect('/dashboard')
 
 
 
